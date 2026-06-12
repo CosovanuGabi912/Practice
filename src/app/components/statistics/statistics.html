@@ -1,0 +1,42 @@
+<div class="container">
+  <div class="header">
+    <h2>Statistics</h2>
+    <button [class]="isGenerating ? 'btn-stop' : 'btn-start'" (click)="toggleGeneration()">
+      {{ isGenerating ? 'Stop Generation' : 'Start Generation' }}
+    </button>
+  </div>
+
+  <div class="content">
+    <div class="card chart-card">
+      <h3>Age Distribution</h3>
+      <canvas #pieCanvas></canvas>
+    </div>
+
+    <div class="card table-card">
+      <h3>All Students <span class="count">({{ students.length }})</span></h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of students">
+              <td>
+                <div class="name-cell">
+                  <img [src]="student.picture" class="avatar" alt="avatar">
+                  {{ student.name }}
+                </div>
+              </td>
+              <td>{{ student.age }}</td>
+              <td>{{ student.email }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
