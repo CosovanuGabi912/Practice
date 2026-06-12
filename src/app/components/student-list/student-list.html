@@ -1,0 +1,31 @@
+<div class="container">
+  <div class="header">
+    <h2>Students</h2>
+    <button class="btn-add" (click)="goToCreate()">+ Add Student</button>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Picture</th>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of students" (click)="goToDetail(student.id)">
+          <td><img class="avatar" [src]="student.picture" alt="avatar"></td>
+          <td>{{ student.name }}</td>
+          <td>{{ student.age }}</td>
+          <td>{{ student.email }}</td>
+          <td>
+            <button class="btn-delete" (click)="delete(student.id, $event)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
