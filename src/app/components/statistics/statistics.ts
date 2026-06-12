@@ -1,6 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
 import { Chart, PieController, ArcElement, Tooltip, Legend } from 'chart.js';
 import { StudentService } from '../../services/student';
 import { Student } from '../../Model/Student';
@@ -18,36 +17,55 @@ export class StatisticsComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('pieCanvas') pieCanvas!: ElementRef<HTMLCanvasElement>;
 
   students: Student[] = [];
+  isGenerating = false;
   private chart: Chart | null = null;
-  private sub!: Subscription;
+  private pollInterval: any = null;
 
-  get isGenerating(): boolean {
-    return this.studentService.isGenerating;
-  }
-
-  constructor(private studentService: StudentService) {}
+  constructor(private studentService: StudentService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.sub = this.studentService.students$.subscribe(students => {
-      this.students = students;
-      this.updateChart();
-    });
+    this.pollInterval = setInterval(() => {
+      this.loadStudents();
+      this.studentService.isGenerating().subscribe(v => {
+        this.isGenerating = v;
+        this.cdr.detectChanges();
+      });
+    }, 1000);
   }
 
   ngAfterViewInit(): void {
     this.buildChart();
+    this.loadStudents();
+    this.studentService.isGenerating().subscribe(v => {
+      this.isGenerating = v;
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {
-    this.sub.unsubscribe();
+    clearInterval(this.pollInterval);
     this.chart?.destroy();
   }
 
+  loadStudents(): void {
+    this.studentService.getAll().subscribe(students => {
+      this.students = students;
+      this.updateChart();
+      this.cdr.detectChanges();
+    });
+  }
+
   toggleGeneration(): void {
-    if (this.studentService.isGenerating) {
-      this.studentService.stopGeneration();
+    if (this.isGenerating) {
+      this.studentService.stopGeneration().subscribe(v => {
+        this.isGenerating = v;
+        this.cdr.detectChanges();
+      });
     } else {
-      this.studentService.startGeneration();
+      this.studentService.startGeneration().subscribe(v => {
+        this.isGenerating = v;
+        this.cdr.detectChanges();
+      });
     }
   }
 

@@ -1,5 +1,4 @@
-
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { StudentService } from '../../services/student';
 import { Student } from '../../Model/Student';
@@ -20,7 +19,8 @@ export class StudentDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private studentService: StudentService
+    private studentService: StudentService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -28,17 +28,19 @@ export class StudentDetailComponent implements OnInit {
     if (id === 'new') {
       this.isNew = true;
     } else {
-      this.student = this.studentService.getById(Number(id));
+      this.studentService.getById(Number(id)).subscribe(s => {
+        this.student = s;
+        this.cdr.detectChanges();
+      });
     }
   }
 
   save(): void {
     if (this.isNew) {
-      this.studentService.create(this.student);
+      this.studentService.create(this.student).subscribe(() => this.router.navigate(['/students']));
     } else {
-      this.studentService.update(this.student);
+      this.studentService.update(this.student).subscribe(() => this.router.navigate(['/students']));
     }
-    this.router.navigate(['/students']);
   }
 
   cancel(): void {

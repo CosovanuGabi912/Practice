@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { Student } from '../../Model/Student';
 import { StudentService } from '../../services/student';
@@ -14,10 +14,17 @@ import { CommonModule } from '@angular/common';
 export class StudentListComponent implements OnInit {
   students: Student[] = [];
 
-  constructor(private studentService: StudentService, private router: Router) {}
+  constructor(private studentService: StudentService, private router: Router, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.students = this.studentService.getAll();
+    this.loadStudents();
+  }
+
+  loadStudents(): void {
+    this.studentService.getAll().subscribe(students => {
+      this.students = students;
+      this.cdr.detectChanges();
+    });
   }
 
   goToDetail(id: number): void {
@@ -30,7 +37,6 @@ export class StudentListComponent implements OnInit {
 
   delete(id: number, event: Event): void {
     event.stopPropagation();
-    this.studentService.delete(id);
-    this.students = this.studentService.getAll();
+    this.studentService.delete(id).subscribe(() => this.loadStudents());
   }
 }

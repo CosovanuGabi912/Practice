@@ -1,84 +1,43 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { Student } from '../Model/Student';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class StudentService {
-  private students: Student[] = [
-    { id: 1, name: 'Alice Johnson', age: 20, email: 'alice@example.com', picture: 'https://i.pravatar.cc/150?img=1' },
-    { id: 2, name: 'Bob Smith', age: 22, email: 'bob@example.com', picture: 'https://i.pravatar.cc/150?img=2' },
-    { id: 3, name: 'Carol White', age: 21, email: 'carol@example.com', picture: 'https://i.pravatar.cc/150?img=3' },
-  ];
+  private url = 'http://localhost:8080/students';
 
-  private nextId = 4;
-  private generationInterval: any = null;
-  isGenerating = false;
+  constructor(private http: HttpClient) {}
 
-  private studentsSubject = new BehaviorSubject<Student[]>(this.students);
-  students$ = this.studentsSubject.asObservable();
-
-  private firstNames = ['Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Oliver', 'Isabella', 'Elijah', 'Sophia', 'Lucas', 'Mia', 'Mason'];
-  private lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Wilson', 'Moore'];
-
-  private emit(): void {
-    this.studentsSubject.next([...this.students]);
+  getAll(): Observable<Student[]> {
+    return this.http.get<Student[]>(this.url);
   }
 
-  private randomStudent(): Student {
-    const first = this.firstNames[Math.floor(Math.random() * this.firstNames.length)];
-    const last = this.lastNames[Math.floor(Math.random() * this.lastNames.length)];
-    const age = Math.floor(Math.random() * 10) + 18;
-    const imgIndex = Math.floor(Math.random() * 70) + 1;
-    return {
-      id: this.nextId++,
-      name: `${first} ${last}`,
-      age,
-      email: `${first.toLowerCase()}.${last.toLowerCase()}@student.com`,
-      picture: `https://i.pravatar.cc/150?img=${imgIndex}`
-    };
+  getById(id: number): Observable<Student> {
+    return this.http.get<Student>(`${this.url}/${id}`);
   }
 
-  startGeneration(): void {
-    if (this.isGenerating) return;
-    this.isGenerating = true;
-    this.generationInterval = setInterval(() => {
-      for (let i = 0; i < 3; i++) {
-        this.students.push(this.randomStudent());
-      }
-      this.emit();
-    }, 1000);
+  create(student: Student): Observable<Student> {
+    return this.http.post<Student>(this.url, student);
   }
 
-  stopGeneration(): void {
-    clearInterval(this.generationInterval);
-    this.isGenerating = false;
+  update(student: Student): Observable<Student> {
+    return this.http.put<Student>(`${this.url}/${student.id}`, student);
   }
 
-  getAll(): Student[] {
-    return this.students;
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${id}`);
   }
 
-  getById(id: number): Student {
-    return this.students.find(s => s.id === id)!;
+  startGeneration(): Observable<boolean> {
+    return this.http.post<boolean>(`${this.url}/generate/start`, {});
   }
 
-  create(student: Student): Student {
-    const newStudent = { ...student, id: this.nextId++ };
-    this.students.push(newStudent);
-    this.emit();
-    return newStudent;
+  stopGeneration(): Observable<boolean> {
+    return this.http.post<boolean>(`${this.url}/generate/stop`, {});
   }
 
-  update(student: Student): void {
-    const index = this.students.findIndex(s => s.id === student.id);
-    this.students[index] = student;
-    this.emit();
-  }
-
-  delete(id: number): void {
-    this.students = this.students.filter(s => s.id !== id);
-    this.emit();
+  isGenerating(): Observable<boolean> {
+    return this.http.get<boolean>(`${this.url}/generate/status`);
   }
 }
