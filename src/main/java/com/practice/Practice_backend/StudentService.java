@@ -1,6 +1,8 @@
 package com.practice.Practice_backend;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 @Service
@@ -8,8 +10,7 @@ public class StudentService {
 
     private final StudentRepository repository;
 
-    private boolean generating = false;
-    private Timer timer = null;
+    private volatile boolean generating = false;
 
     private final String[] firstNames =
             {"Emma","Liam","Olivia","Noah","Ava","Oliver","Isabella","Elijah","Sophia","Lucas","Mia","Mason"};
@@ -23,6 +24,25 @@ public class StudentService {
                     new Student("Alice Johnson", 20, "alice@example.com", "https://i.pravatar.cc/150?img=1"),
                     new Student("Bob Smith",     22, "bob@example.com",   "https://i.pravatar.cc/150?img=2"),
                     new Student("Carol White",   21, "carol@example.com", "https://i.pravatar.cc/150?img=3")
+            ));
+        }
+    }
+
+    @Scheduled(fixedRate = 1000)
+    @Transactional
+    public void generateStudents() {
+        if (!generating) return;
+        Random rnd = new Random();
+        for (int i = 0; i < 3; i++) {
+            String first = firstNames[rnd.nextInt(firstNames.length)];
+            String last  = lastNames[rnd.nextInt(lastNames.length)];
+            int age      = 18 + rnd.nextInt(10);
+            int img      = 1 + rnd.nextInt(70);
+            repository.save(new Student(
+                    first + " " + last,
+                    age,
+                    first.toLowerCase() + "." + last.toLowerCase() + "@student.com",
+                    "https://i.pravatar.cc/150?img=" + img
             ));
         }
     }
@@ -46,31 +66,7 @@ public class StudentService {
 
     public boolean isGenerating() { return generating; }
 
-    public void startGeneration() {
-        if (generating) return;
-        generating = true;
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                Random rnd = new Random();
-                for (int i = 0; i < 3; i++) {
-                    String first = firstNames[rnd.nextInt(firstNames.length)];
-                    String last  = lastNames[rnd.nextInt(lastNames.length)];
-                    int age      = 18 + rnd.nextInt(10);
-                    int img      = 1 + rnd.nextInt(70);
-                    repository.save(new Student(
-                            first + " " + last,
-                            age,
-                            first.toLowerCase() + "." + last.toLowerCase() + "@student.com",
-                            "https://i.pravatar.cc/150?img=" + img
-                    ));
-                }
-            }
-        }, 0, 1000);
-    }
+    public void startGeneration() { generating = true; }
 
-    public void stopGeneration() {
-        if (timer != null) timer.cancel();
-        generating = false;
-    }
+    public void stopGeneration() { generating = false; }
 }
