@@ -18,11 +18,13 @@ public class StudentService {
 
     public StudentService(StudentRepository repository) {
         this.repository = repository;
-        repository.saveAll(List.of(
-                new Student("Alice Johnson", 20, "alice@example.com", "https://i.pravatar.cc/150?img=1"),
-                new Student("Bob Smith",     22, "bob@example.com",   "https://i.pravatar.cc/150?img=2"),
-                new Student("Carol White",   21, "carol@example.com", "https://i.pravatar.cc/150?img=3")
-        ));
+        if (repository.count() == 0) {
+            repository.saveAll(List.of(
+                    new Student("Alice Johnson", 20, "alice@example.com", "https://i.pravatar.cc/150?img=1"),
+                    new Student("Bob Smith",     22, "bob@example.com",   "https://i.pravatar.cc/150?img=2"),
+                    new Student("Carol White",   21, "carol@example.com", "https://i.pravatar.cc/150?img=3")
+            ));
+        }
     }
 
     public List<Student> getAll() { return repository.findAll(); }
